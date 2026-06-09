@@ -123,9 +123,7 @@ namespace SquadLeaders
                     MelonLogger.Msg(leader.name + " promoted to serzhant");
                 }
                 else if (leader.name.StartsWith("US PASGT"))
-                {
-                    //SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/BLU_PASGT_M83/dress").GetComponent<SkinnedMeshRenderer>();
-                    //uniform.material.SetTexture("_Albedo", AmericanSL);
+                {                    
                     Transform chest = leader.transform.Find("Troop Base/TRP_SKELETON/soldierHip/soldierSpine1/soldierSpine2/soldierSpine3/soldierChest");
                     Transform helmet = chest.transform.Find("soldierNeck1/soldierNeck2/soldierHead");                    
 
