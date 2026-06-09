@@ -29,7 +29,7 @@ namespace SquadLeaders
         {
             MelonPreferences_Category cfg = MelonPreferences.CreateCategory("Squad Leaders");
             soviet_skin = cfg.CreateEntry<string>("Soviet SL skin", "default");
-            soviet_skin.Comment = "'default' for blank red straps, 'CA' red straps with CA letters, 'black' for black straps with CA letters, 'field' for subdued field straps";
+            soviet_skin.Comment = "'default' for blank red straps, 'CA' - red straps with CA letters, 'black' - black straps with CA letters, 'field' - khaki straps";
 
             canadian_skin = cfg.CreateEntry<bool>("Canadian SL skin", false);
             canadian_skin.Comment = "switch to true for use with Canadian Leopards mod";
@@ -84,30 +84,43 @@ namespace SquadLeaders
                 default:
                     SovietSLPath = "Mods/SquadLeaders/SovietSL.png";
                     break;
-            }            
-            byte[] SovietSLData = File.ReadAllBytes(SovietSLPath);
-            if (SovietSLData != null) { SovietSL.LoadImage(SovietSLData, true); }
-            else { MelonLogger.Msg("Wanted texture file at " + SovietSLPath + " missing!"); }
+            }
+            try
+            {
+                byte[] SovietSLData = File.ReadAllBytes(SovietSLPath);
+                if (SovietSLData != null) { SovietSL.LoadImage(SovietSLData, true); }
+            }
+            catch (FileNotFoundException e) { MelonLogger.Error(e); }
 
             Texture2D AmericanSL = new Texture2D(353, 444);            
             string AmericanSLPath = "Mods/SquadLeaders/US_SSGT.png";
-            byte[] AmericanSLData = File.ReadAllBytes(AmericanSLPath);
-            if (AmericanSLData != null) { AmericanSL.LoadImage(AmericanSLData, true); }
-            else { MelonLogger.Msg("Wanted texture file at " + AmericanSLPath + " missing!"); }
+            try
+            {
+                byte[] AmericanSLData = File.ReadAllBytes(AmericanSLPath);
+                if (AmericanSLData != null) { AmericanSL.LoadImage(AmericanSLData, true); }
+            }
+            catch (FileNotFoundException e) { MelonLogger.Error(e); }
             Material us_patch = new Material(Shader.Find("Standard (FLIR)"));
             us_patch.mainTexture = AmericanSL;
 
             Texture2D NVASL = new Texture2D(1024, 1024);
             string NVASLPath = "Mods/SquadLeaders/NVASL.png";
-            byte[] NVASLData = File.ReadAllBytes(NVASLPath);
-            if (NVASLData != null) { NVASL.LoadImage(NVASLData, true); }
-            else { MelonLogger.Msg("Wanted texture file at " + NVASLPath + " missing!"); }
+            try
+            {
+                byte[] NVASLData = File.ReadAllBytes(NVASLPath);
+                if (NVASLData != null) { NVASL.LoadImage(NVASLData, true); }
+            }
+            catch (FileNotFoundException e) { MelonLogger.Error(e); }
+            
 
             Texture2D BundSL = new Texture2D(1024, 1024);
             string BundSLPath = (canadian_skin.Value) ? "Mods/SquadLeaders/CanSL.png" : "Mods/SquadLeaders/BundSL.png";
-            byte[] BundSLData = File.ReadAllBytes(BundSLPath);
-            if (BundSLData != null) { BundSL.LoadImage(BundSLData, true); }
-            else { MelonLogger.Msg("Wanted texture file at " + BundSLPath + " missing!"); }            
+            try
+            {
+                byte[] BundSLData = File.ReadAllBytes(BundSLPath);
+                if (BundSLData != null) { BundSL.LoadImage(BundSLData, true); }
+            }
+            catch (FileNotFoundException e) { MelonLogger.Error(e); }            
 
             SquadData[] squads = GameObject.FindObjectsByType<SquadData>(FindObjectsSortMode.None);
             foreach (SquadData squad in squads)
@@ -123,7 +136,7 @@ namespace SquadLeaders
                     MelonLogger.Msg(leader.name + " promoted to serzhant");
                 }
                 else if (leader.name.StartsWith("US PASGT"))
-                {                    
+                {
                     Transform chest = leader.transform.Find("Troop Base/TRP_SKELETON/soldierHip/soldierSpine1/soldierSpine2/soldierSpine3/soldierChest");
                     Transform helmet = chest.transform.Find("soldierNeck1/soldierNeck2/soldierHead");                    
 
@@ -140,7 +153,7 @@ namespace SquadLeaders
                     left_collar_patch.transform.position = chest.transform.position;
                     NewQuad(left_collar_patch, us_patch);
                     left_collar_patch.transform.localScale = new Vector3(0.011f, 0.015f, 0.015f);
-                    left_collar_patch.transform.localPosition = new Vector3(-0.125f, 0.085f, 0.1f); //-0.13, 0.076, 0.1 //-0.0135, 0.065, 0.1
+                    left_collar_patch.transform.localPosition = new Vector3(-0.125f, 0.085f, 0.1f);
                     left_collar_patch.transform.localRotation = Quaternion.Euler(new Vector3(20f, 215f, 300f));
 
                     GameObject right_collar_patch = new GameObject("right collar patch");
