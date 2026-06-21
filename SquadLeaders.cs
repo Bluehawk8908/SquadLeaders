@@ -9,7 +9,7 @@ using SquadLeaders;
 using System.Collections;
 using System.IO;
 
-[assembly: MelonInfo(typeof(SquadLeadersClass), "Squad Leaders", "1.1.0", "Bluehawk")]
+[assembly: MelonInfo(typeof(SquadLeadersClass), "Squad Leaders", "1.1.1", "Bluehawk")]
 [assembly: MelonGame("Radian Simulations LLC", "GHPC")]
 
 namespace SquadLeaders
