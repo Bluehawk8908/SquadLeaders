@@ -41,6 +41,11 @@ namespace SquadLeaders
             mute_console.Comment = "Mutes MelonLoader console messages except errors";
         }
 
+        static void Log(string text)
+        {
+            if (!mute_console.Value) MelonLogger.Msg(text);
+        }
+
         public static void NewQuad(GameObject go, Material mat)
         {
             MeshFilter filter = go.AddComponent<MeshFilter>();
@@ -71,6 +76,7 @@ namespace SquadLeaders
         public static void PromotePL(InfantryUnit leader, Texture2D SovietPL, Texture2D SovietPL_nm, Texture2D SovietPL_sm, 
             Material us_off_patch, Texture2D NVAPL, Texture2D BundPL)
         {
+            leader.gameObject.AddComponent<SergeantPromoted>();
             if (leader.name.StartsWith("SA Obr73"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/RED_OBR73_KHAKI/dress").GetComponent<SkinnedMeshRenderer>();                
@@ -80,7 +86,7 @@ namespace SquadLeaders
 
                 leader.transform.Find("Troop Base/RED_OBR73_KHAKI/accoutrements").gameObject.SetActive(false);
                 leader.transform.Find("Troop Base/RED_OBR73_KHAKI/webbing").gameObject.SetActive(false);
-                if (!mute_console.Value) MelonLogger.Msg(leader.name + " promoted to leytenant");
+                Log(leader.name + " promoted to leytenant");
             }
             else if (leader.name.StartsWith("US PASGT"))
             {
@@ -111,33 +117,31 @@ namespace SquadLeaders
                 right_collar_patch.transform.localPosition = new Vector3(-0.135f, 0.075f, -0.095f);
                 right_collar_patch.transform.localRotation = Quaternion.Euler(new Vector3(20f, 330f, 45f));
 
-                if (!mute_console.Value) MelonLogger.Msg(leader.name + " promoted to 1st lieutenant");
+                Log(leader.name + " promoted to 1st lieutenant");
             }
             else if (leader.name.StartsWith("NVA KAZ64"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/RED_KAZ64_STRICH/dress").GetComponent<SkinnedMeshRenderer>();
                 uniform.material.SetTexture("_Albedo", NVAPL);
-                if (!mute_console.Value) MelonLogger.Msg(leader.name + " promoted to Leutnant");
+                Log(leader.name + " promoted to Leutnant");
             }
             else if (leader.name.StartsWith("BW Feldanzug"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/BLU_FAZ63_OLIVE/dress").GetComponent<SkinnedMeshRenderer>();
                 uniform.material.SetTexture("_Albedo", BundPL);
-                if (!mute_console.Value) { 
-                    if (canadian_skin.Value) MelonLogger.Msg(leader.name + "(CF) promoted to lieutenant"); else MelonLogger.Msg(leader.name + " promoted to Oberleutnant");
-                }
+                
+                if (canadian_skin.Value) Log(leader.name + "(CF) promoted to lieutenant"); else Log(leader.name + " promoted to Oberleutnant");                
             }
         }
 
         public static void PromoteSL(InfantryUnit leader, Material us_patch, Texture2D SovietSL, Texture2D BundSL, Texture2D NVASL, bool PlatoonSgt)
         {
+            leader.gameObject.AddComponent<SergeantPromoted>();
             if (leader.name.StartsWith("SA Obr73"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/RED_OBR73_KHAKI/dress").GetComponent<SkinnedMeshRenderer>();
-                uniform.material.SetTexture("_Albedo", SovietSL);
-                if (!mute_console.Value) { 
-                        if (PlatoonSgt) { MelonLogger.Msg(leader.name + " promoted to starshiy serzhant"); } else MelonLogger.Msg(leader.name + " promoted to serzhant");
-                }
+                uniform.material.SetTexture("_Albedo", SovietSL);                
+                if (PlatoonSgt) Log(leader.name + " promoted to starshiy serzhant"); else Log(leader.name + " promoted to serzhant");                
             }
             else if (leader.name.StartsWith("US PASGT"))
             {
@@ -167,36 +171,27 @@ namespace SquadLeaders
                 right_collar_patch.transform.localScale = new Vector3(0.008f, 0.015f, 0.015f);
                 right_collar_patch.transform.localPosition = new Vector3(-0.135f, 0.075f, -0.095f);
                 right_collar_patch.transform.localRotation = Quaternion.Euler(new Vector3(20f, 330f, 45f));
-
-                if (!mute_console.Value)
-                {
-                    if (PlatoonSgt) { MelonLogger.Msg(leader.name + " promoted to sergeant first class"); } else MelonLogger.Msg(leader.name + " promoted to staff-sergeant");
-                }
+                
+                if (PlatoonSgt) Log(leader.name + " promoted to sergeant first class"); else Log(leader.name + " promoted to staff-sergeant");                
             }
             else if (leader.name.StartsWith("NVA KAZ64"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/RED_KAZ64_STRICH/dress").GetComponent<SkinnedMeshRenderer>();
                 uniform.material.SetTexture("_Albedo", NVASL);
-                if (!mute_console.Value)
-                {
-                    if (PlatoonSgt) { MelonLogger.Msg(leader.name + " promoted to Feldwebel"); } else MelonLogger.Msg(leader.name + " promoted to Unteroffizier");
-                }
+                if (PlatoonSgt) Log(leader.name + " promoted to Feldwebel"); else Log(leader.name + " promoted to Unteroffizier");                
             }
             else if (leader.name.StartsWith("BW Feldanzug"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/BLU_FAZ63_OLIVE/dress").GetComponent<SkinnedMeshRenderer>();
                 uniform.material.SetTexture("_Albedo", BundSL);
-                if (!mute_console.Value)
+                if (PlatoonSgt)
                 {
-                    if (PlatoonSgt)
-                    {
-                        if (canadian_skin.Value) MelonLogger.Msg(leader.name + "(CF) promoted to warrant officer"); else MelonLogger.Msg(leader.name + " promoted to Oberfeldwebel");
-                    }
-                    else
-                    {
-                        if (canadian_skin.Value) MelonLogger.Msg(leader.name + "(CF) promoted to sergeant"); else MelonLogger.Msg(leader.name + " promoted to Stabsunteroffizier");
-                    }
+                    if (canadian_skin.Value) Log(leader.name + "(CF) promoted to warrant officer"); else Log(leader.name + " promoted to Oberfeldwebel");
                 }
+                else
+                {
+                    if (canadian_skin.Value) Log(leader.name + "(CF) promoted to sergeant"); else Log(leader.name + " promoted to Stabsunteroffizier");
+                }                
             }
         }
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -297,15 +292,16 @@ namespace SquadLeaders
             Texture2D BundFeld = FetchTex(1024, 1024, BundFeldPath);
 
             string BundPLPath = (canadian_skin.Value) ? "Mods/SquadLeaders/CanPL.png" : "Mods/SquadLeaders/BundPL.png";
-            Texture2D BundPL = FetchTex(1024, 1024, BundPLPath);
+            Texture2D BundPL = FetchTex(1024, 1024, BundPLPath);            
             
             InfantryEmplacementHolder[] emplacements = GameObject.FindObjectsByType<InfantryEmplacementHolder>(FindObjectsSortMode.None);
             foreach (var emplacement in emplacements)
-            {
+            {                
                 if (emplacement.transform.parent == null) { continue; }
                 GameObject trench_holder = emplacement.transform.parent.gameObject;
                 InfantryUnit[] troopsInTrench = trench_holder.GetComponentsInChildren<InfantryUnit>();
-                int squadCount = troopsInTrench.Length / 6;
+                if (troopsInTrench.Length == 0) { continue; }                
+                int squadCount = troopsInTrench.Length / 6;                
                 if (squadCount > 0) {
                     for (int i = 0; i < squadCount; i++) { 
 
@@ -315,15 +311,13 @@ namespace SquadLeaders
                                 PromotePL(troopsInTrench[0], SovietPL, SovietPL_nm, SovietPL_sm, us_off_patch, NVAPL, BundPL);
                                 PromoteSL(troopsInTrench[1], us_patch_sfc, SovietSrSgt, BundFeld, NVAFeld, true);
                             } 
-                            else { PromoteSL(troopsInTrench[i + (i * 5)], us_patch, SovietSL, BundSL, NVASL, false); }
-                            troopsInTrench[i + (i * 5)].gameObject.AddComponent<SergeantPromoted>();
+                            else { PromoteSL(troopsInTrench[i + (i * 5)], us_patch, SovietSL, BundSL, NVASL, false); }                            
                         }
                     }
                 }
                 else if (troopsInTrench[0].gameObject.GetComponent<SergeantPromoted>() == null)
                 {
-                    PromoteSL(troopsInTrench[0], us_patch, SovietSL, BundSL, NVASL, false);
-                    troopsInTrench[0].gameObject.AddComponent<SergeantPromoted>();
+                    PromoteSL(troopsInTrench[0], us_patch, SovietSL, BundSL, NVASL, false);                    
                 }
             }
 
@@ -332,24 +326,23 @@ namespace SquadLeaders
             {
                 if (squad.Leader == null) { continue; }
                 if (squad.Leader.Emplacement != null && squad.InfantryManager == null) { continue; }
-                InfantryUnit leader = squad.Leader;                
+                InfantryUnit leader = squad.Leader;
+                if (leader.gameObject.GetComponent<SergeantPromoted>() != null) { continue; }
                 if (squad.InfantryManager != null)
-                {                    
+                {
                     Vehicle carrier = squad.InfantryManager.gameObject.GetComponent<Vehicle>();
-                    PlatoonData platoon = carrier.Platoon;
-                    if (platoon != null && carrier == platoon.Units[0])
+                    PlatoonData vic_platoon = carrier.Platoon;
+                    if (vic_platoon != null && carrier == vic_platoon.Units[0])
                     {                        
-                        if (leader.gameObject.GetComponent<SergeantPromoted>() != null) { continue; }
-                        leader.gameObject.AddComponent<SergeantPromoted>();
                         PromotePL(leader, SovietPL, SovietPL_nm, SovietPL_sm, us_off_patch, NVAPL, BundPL);
                         PromoteSL(squad.Units[1], us_patch_sfc, SovietSrSgt, BundFeld, NVAFeld, true);
                     }
+                    else { PromoteSL(leader, us_patch, SovietSL, BundSL, NVASL, false); }
                 }
-                
-                if (leader.gameObject.GetComponent<SergeantPromoted>() != null) { continue; }
-                leader.gameObject.AddComponent<SergeantPromoted>();
-
-                PromoteSL(leader, us_patch, SovietSL, BundSL, NVASL, false);
+                else
+                {
+                    PromoteSL(leader, us_patch, SovietSL, BundSL, NVASL, false);
+                }
             }            
             yield break;
         }
