@@ -1,5 +1,5 @@
 # Squad Leaders
-A mod for Gunner Heat PC! that cosmetically distinguishes squad/section leaders from other infantry  
+A mod for Gunner Heat PC! that cosmetically distinguishes platoon leaders and squad/section leaders from other infantry  
 
 **Installation**  
 Requires MelonLoader, intended for version 0.6.1.  
