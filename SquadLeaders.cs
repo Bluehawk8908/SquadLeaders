@@ -9,33 +9,37 @@ using SquadLeaders;
 using System.Collections;
 using System.IO;
 
-[assembly: MelonInfo(typeof(SquadLeadersClass), "Squad Leaders", "1.1.1", "Bluehawk")]
+[assembly: MelonInfo(typeof(SquadLeadersClass), "Squad Leaders", "1.2.0", "Bluehawk")]
 [assembly: MelonGame("Radian Simulations LLC", "GHPC")]
+[assembly: MelonPriority(10)]
 
 namespace SquadLeaders
 {
-    public class SergeantPromoted : MonoBehaviour
+    public enum Rank { SquadLeader, PlatoonSgt, PlatoonLeader}
+    
+    public class LeaderPromoted : MonoBehaviour
     {
+        public Rank Rank { get; set; }
         void Awake()
         {
-            enabled = false;
+            enabled = false;            
         }
     }
     public class SquadLeadersClass : MelonMod
     {
         public static GameObject gameManager;
         public static MelonPreferences_Entry<string> soviet_skin;
-        public static MelonPreferences_Entry<bool> canadian_skin;
+        public static MelonPreferences_Entry<bool> canadian_skin;        
         public static MelonPreferences_Entry<bool> mute_console;
 
         public override void OnInitializeMelon()
         {
             MelonPreferences_Category cfg = MelonPreferences.CreateCategory("Squad Leaders");
             soviet_skin = cfg.CreateEntry<string>("Soviet SL skin", "default");
-            soviet_skin.Comment = "'default' for blank red straps, 'CA' - red straps with CA letters, 'black' - black straps with CA letters, 'field' - khaki straps";
+            soviet_skin.Comment = "'default' for blank red straps, 'CA' - red straps with CA letters, 'black' - black straps with CA letters, 'field' - khaki straps, 'blue' - airborne";
 
             canadian_skin = cfg.CreateEntry<bool>("Canadian SL skin", false);
-            canadian_skin.Comment = "switch to true for use with Canadian Leopards mod";
+            canadian_skin.Comment = "switch to true for use with Canadian Leopards mod";            
 
             mute_console = cfg.CreateEntry<bool>("Mute console", false);
             mute_console.Comment = "Mutes MelonLoader console messages except errors";
@@ -73,10 +77,25 @@ namespace SquadLeaders
             catch (System.Exception e) { MelonLogger.Error(e); return null; }            
         }
 
+        public static Texture2D FetchTex(int x, int y, string path, bool linear)
+        {
+            Texture2D temp = new Texture2D(x, y, TextureFormat.DXT5, true, linear);
+            try
+            {
+                byte[] data = File.ReadAllBytes(path);
+                temp.LoadImage(data);
+                return temp;
+            }
+            catch (FileNotFoundException e) { MelonLogger.Error(e); return null; }
+            catch (System.Exception e) { MelonLogger.Error(e); return null; }
+        }
+
         public static void PromotePL(InfantryUnit leader, Texture2D SovietPL, Texture2D SovietPL_nm, Texture2D SovietPL_sm, 
+            Texture2D VDV_off_beret, Texture2D VDV_off_beret_nm, Texture2D VDV_off_beret_ao, Texture2D VDV_off_beret_sm,
             Material us_off_patch, Texture2D NVAPL, Texture2D BundPL)
         {
-            leader.gameObject.AddComponent<SergeantPromoted>();
+            LeaderPromoted prom = leader.gameObject.AddComponent<LeaderPromoted>();
+            prom.Rank = Rank.PlatoonLeader;
             if (leader.name.StartsWith("SA Obr73"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/RED_OBR73_KHAKI/dress").GetComponent<SkinnedMeshRenderer>();                
@@ -86,6 +105,18 @@ namespace SquadLeaders
 
                 leader.transform.Find("Troop Base/RED_OBR73_KHAKI/accoutrements").gameObject.SetActive(false);
                 leader.transform.Find("Troop Base/RED_OBR73_KHAKI/webbing").gameObject.SetActive(false);
+
+                if (soviet_skin.Value == "blue" || soviet_skin.Value == "Blue" || soviet_skin.Value == "BLUE")
+                {
+                    GameObject beret = leader.transform.Find("Troop Base/TRP_SKELETON/soldierHip/soldierSpine1/" +
+                        "soldierSpine2/soldierSpine3/soldierChest/soldierNeck1/soldierNeck2/soldierHead/VDV_beret(Clone)/default").gameObject;
+                    if (beret != null)
+                    {
+                        beret.GetComponent<MeshRenderer>().material.SetTexture("_Albedo", VDV_off_beret);
+                        beret.GetComponent<MeshRenderer>().material.SetTexture("_Normal", VDV_off_beret_nm);
+                        beret.GetComponent<MeshRenderer>().material.SetTexture("_Occlusion", VDV_off_beret_ao);
+                    } 
+                }
                 Log(leader.name + " promoted to leytenant");
             }
             else if (leader.name.StartsWith("US PASGT"))
@@ -136,7 +167,8 @@ namespace SquadLeaders
 
         public static void PromoteSL(InfantryUnit leader, Material us_patch, Texture2D SovietSL, Texture2D BundSL, Texture2D NVASL, bool PlatoonSgt)
         {
-            leader.gameObject.AddComponent<SergeantPromoted>();
+            LeaderPromoted prom = leader.gameObject.AddComponent<LeaderPromoted>();
+            if (PlatoonSgt) prom.Rank = Rank.PlatoonSgt; else prom.Rank = Rank.SquadLeader;
             if (leader.name.StartsWith("SA Obr73"))
             {
                 SkinnedMeshRenderer uniform = leader.transform.Find("Troop Base/RED_OBR73_KHAKI/dress").GetComponent<SkinnedMeshRenderer>();
@@ -192,7 +224,7 @@ namespace SquadLeaders
                 {
                     if (canadian_skin.Value) Log(leader.name + "(CF) promoted to sergeant"); else Log(leader.name + " promoted to Stabsunteroffizier");
                 }                
-            }
+            }            
         }
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
@@ -230,6 +262,12 @@ namespace SquadLeaders
                     SovietSLPath = "Mods/SquadLeaders/SovietSL_Field.png";
                     SovietSrSgtPath = "Mods/SquadLeaders/SovietSrSgt_Field.png";
                     break;
+                case "blue":
+                case "Blue":
+                case "BLUE":
+                    SovietSLPath = "Mods/SquadLeaders/SovietSL_Blue.png";
+                    SovietSrSgtPath = "Mods/SquadLeaders/SovietSrSgt_Blue.png";
+                    break;
                 default:
                     SovietSLPath = "Mods/SquadLeaders/SovietSL.png";
                     SovietSrSgtPath = "Mods/SquadLeaders/SovietSrSgt.png";
@@ -239,27 +277,28 @@ namespace SquadLeaders
             Texture2D SovietSrSgt = FetchTex(1024, 1024, SovietSrSgtPath);
 
             string SovietPLPath;
-            if (soviet_skin.Value == "black" || soviet_skin.Value == "Black" || soviet_skin.Value == "BLACK") 
-            { SovietPLPath = "Mods/SquadLeaders/SovietPL_Black.png"; } else { SovietPLPath = "Mods/SquadLeaders/SovietPL.png"; }
+            string SovietPL_nm_Path;
+            if (soviet_skin.Value == "black" || soviet_skin.Value == "Black" || soviet_skin.Value == "BLACK") { 
+                SovietPLPath = "Mods/SquadLeaders/SovietPL_Black.png";
+                SovietPL_nm_Path = "Mods/SquadLeaders/SovietPL_Black_nm.png";
+            }
+            else if (soviet_skin.Value == "blue" || soviet_skin.Value == "Blue" || soviet_skin.Value == "BLUE") {
+                SovietPLPath = "Mods/SquadLeaders/SovietPL_Blue.png";
+                SovietPL_nm_Path = "Mods/SquadLeaders/SovietPL_Blue_nm.png";
+            }
+            else { 
+                SovietPLPath = "Mods/SquadLeaders/SovietPL.png";
+                SovietPL_nm_Path = "Mods/SquadLeaders/SovietPL_nm.png";
+            }
             Texture2D SovietPL = FetchTex(1024, 1024, SovietPLPath);
+            Texture2D SovietPL_nm = FetchTex(1024, 1024, SovietPL_nm_Path, true);            
 
-            string SovietPL_nm_Path = "Mods/SquadLeaders/SovietPL_nm.png";
-            Texture2D SovietPL_nm = new Texture2D(1024, 1024, TextureFormat.DXT5, true, true);
-            try
-            {
-                byte[] data = File.ReadAllBytes(SovietPL_nm_Path);
-                SovietPL_nm.LoadImage(data, true);                
-            }
-            catch (FileNotFoundException e) { MelonLogger.Error(e);}
+            Texture2D SovietPL_sm = FetchTex(1024, 1024, "Mods/SquadLeaders/SovietPL_sm.png", true);            
 
-            string SovietPL_sm_Path = "Mods/SquadLeaders/SovietPL_sm.png";
-            Texture2D SovietPL_sm = new Texture2D(1024, 1024, TextureFormat.DXT5, true, true);
-            try
-            {
-                byte[] data = File.ReadAllBytes(SovietPL_sm_Path);
-                SovietPL_sm.LoadImage(data, true);                
-            }
-            catch (FileNotFoundException e) { MelonLogger.Error(e); }
+            Texture2D VDV_off_beret = FetchTex(512, 512, "Mods/SquadLeaders/vdv_off_beret_co.png");
+            Texture2D VDV_off_beret_nm = FetchTex(512, 512, "Mods/SquadLeaders/vdv_off_beret_nm.png", true);
+            Texture2D VDV_off_beret_ao = FetchTex(512, 512, "Mods/SquadLeaders/vdv_off_beret_ao.png");
+            Texture2D VDV_off_beret_sm = FetchTex(512, 512, "Mods/SquadLeaders/vdv_off_beret_sm.png");
 
             string AmericanSLPath = "Mods/SquadLeaders/US_SSGT.png";
             Texture2D AmericanSL = FetchTex(353, 444, AmericanSLPath);
@@ -305,17 +344,17 @@ namespace SquadLeaders
                 if (squadCount > 0) {
                     for (int i = 0; i < squadCount; i++) { 
 
-                        if (troopsInTrench[i + (i * 5)].gameObject.GetComponent<SergeantPromoted>() == null)
+                        if (troopsInTrench[i + (i * 5)].gameObject.GetComponent<LeaderPromoted>() == null)
                         {
                             if (i == 0 && squadCount >= 3) {
-                                PromotePL(troopsInTrench[0], SovietPL, SovietPL_nm, SovietPL_sm, us_off_patch, NVAPL, BundPL);
+                                PromotePL(troopsInTrench[0], SovietPL, SovietPL_nm, SovietPL_sm, VDV_off_beret, VDV_off_beret_nm, VDV_off_beret_ao, VDV_off_beret_sm, us_off_patch, NVAPL, BundPL);
                                 PromoteSL(troopsInTrench[1], us_patch_sfc, SovietSrSgt, BundFeld, NVAFeld, true);
                             } 
                             else { PromoteSL(troopsInTrench[i + (i * 5)], us_patch, SovietSL, BundSL, NVASL, false); }                            
                         }
                     }
                 }
-                else if (troopsInTrench[0].gameObject.GetComponent<SergeantPromoted>() == null)
+                else if (troopsInTrench[0].gameObject.GetComponent<LeaderPromoted>() == null)
                 {
                     PromoteSL(troopsInTrench[0], us_patch, SovietSL, BundSL, NVASL, false);                    
                 }
@@ -327,14 +366,14 @@ namespace SquadLeaders
                 if (squad.Leader == null) { continue; }
                 if (squad.Leader.Emplacement != null && squad.InfantryManager == null) { continue; }
                 InfantryUnit leader = squad.Leader;
-                if (leader.gameObject.GetComponent<SergeantPromoted>() != null) { continue; }
+                if (leader.gameObject.GetComponent<LeaderPromoted>() != null) { continue; }
                 if (squad.InfantryManager != null)
                 {
                     Vehicle carrier = squad.InfantryManager.gameObject.GetComponent<Vehicle>();
                     PlatoonData vic_platoon = carrier.Platoon;
                     if (vic_platoon != null && carrier == vic_platoon.Units[0])
                     {                        
-                        PromotePL(leader, SovietPL, SovietPL_nm, SovietPL_sm, us_off_patch, NVAPL, BundPL);
+                        PromotePL(leader, SovietPL, SovietPL_nm, SovietPL_sm, VDV_off_beret, VDV_off_beret_nm, VDV_off_beret_ao, VDV_off_beret_sm, us_off_patch, NVAPL, BundPL);
                         PromoteSL(squad.Units[1], us_patch_sfc, SovietSrSgt, BundFeld, NVAFeld, true);
                     }
                     else { PromoteSL(leader, us_patch, SovietSL, BundSL, NVASL, false); }
